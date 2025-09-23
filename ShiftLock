@@ -1,0 +1,91 @@
+-- 🔒 Shift Lock Mobile - FPS MAX Ultra Responsivo
+-- Coloque em StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local shiftLockEnabled = false
+local screenGui, shiftButton, lockIcon
+
+-- Função de atualização ShiftLock
+local function updateShiftLock()
+	local char = player.Character
+	local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+	local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+
+	if shiftLockEnabled and humanoid and rootPart and camera then
+		humanoid.AutoRotate = false
+
+		local lookVector = camera.CFrame.LookVector
+		lookVector = Vector3.new(lookVector.X, 0, lookVector.Z)
+		if lookVector.Magnitude > 0 then
+			-- Giro instantâneo máximo
+			rootPart.CFrame = CFrame.new(rootPart.Position, rootPart.Position + lookVector.Unit)
+		end
+	elseif humanoid then
+		humanoid.AutoRotate = true
+	end
+end
+
+-- Criar GUI do ShiftLock
+local function createGui()
+	if screenGui and screenGui.Parent then return end
+
+	screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "ShiftLockGui"
+	screenGui.ResetOnSpawn = false
+	screenGui.Parent = player:WaitForChild("PlayerGui")
+
+	shiftButton = Instance.new("ImageButton")
+	shiftButton.Size = UDim2.new(0, 60, 0, 60)
+	shiftButton.Position = UDim2.new(1, -60, 1, -160)
+	shiftButton.BackgroundTransparency = 1
+	shiftButton.Image = ""
+	shiftButton.AutoButtonColor = true
+	shiftButton.Parent = screenGui
+	shiftButton.ZIndex = 10
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(1,0)
+	corner.Parent = shiftButton
+
+	lockIcon = Instance.new("ImageLabel")
+	lockIcon.Size = UDim2.new(0.6,0,0.6,0)
+	lockIcon.Position = UDim2.new(0.2,0,0.2,0)
+	lockIcon.BackgroundTransparency = 1
+	lockIcon.Image = "rbxassetid://6031068433"
+	lockIcon.ImageColor3 = Color3.fromRGB(255,255,255)
+	lockIcon.Parent = shiftButton
+	lockIcon.ZIndex = 11
+
+	shiftButton.MouseButton1Click:Connect(function()
+		shiftLockEnabled = not shiftLockEnabled
+		if shiftLockEnabled then
+			shiftButton.BackgroundColor3 = Color3.fromRGB(0,127,255)
+			lockIcon.ImageColor3 = Color3.fromRGB(0,127,255)
+			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+		else
+			shiftButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+			lockIcon.ImageColor3 = Color3.fromRGB(255,255,255)
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		end
+	end)
+end
+
+-- Monitorar respawn do player
+player.CharacterAdded:Connect(function()
+	createGui()
+	if shiftLockEnabled then
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+	end
+end)
+
+-- Inicializar GUI
+createGui()
+
+-- Conexão única e ultra leve
+RunService.RenderStepped:Connect(updateShiftLock)
